@@ -1,0 +1,53 @@
+
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
+name: 'git_snowflake_spend'
+version: '1.0.0'
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'default'
+
+# These configurations specify where dbt should look for different types of files.
+# The `source-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
+source-paths: ["models"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+data-paths: ["data"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"  # directory which will store compiled SQL files
+clean-targets:         # directories to be removed by `dbt clean`
+    - "target"
+    - "dbt_modules"
+
+
+# ======
+# Snowflake Configs
+# ======
+quoting:
+    database: true
+    identifier: false
+    schema: false
+# ======
+# Run Hooks
+# ======
+on-run-start:
+    - "{{ dbt_logging_start('on run start hooks') }}"
+    - "{{ resume_warehouse(var('resume_warehouse', false), var('warehouse_name')) }}"
+    - "{{ create_udfs() }}"
+
+on-run-end:
+    - "{{ dbt_logging_start('on run end hooks') }}"
+    - "{{ grant_usage_to_schemas() }}"
+    - "drop schema if exists {{ generate_schema_name('temporary') }}"
+    - "{{ suspend_warehouse(var('suspend_warehouse', false), var('warehouse_name')) }}"
+
+# ======
+# Model Configs
+# ======
+models:
+  snowflake_spend:
+    enabled: true
